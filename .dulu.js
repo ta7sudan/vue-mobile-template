@@ -21,110 +21,75 @@ module.exports = function (projectName) {
 				name: 'desc',
 				type: 'input',
 				message: 'Project description',
-				default: 'A rollup library project'
+				default: 'A Vue mobile project'
 			},
 			{
 				name: 'keywords',
 				type: 'input',
 				message: 'Keywords',
-				default: 'rollup'
+				default: 'vue mobile'
 			},
 			{
-				name: 'bundleName',
+				name: 'sitePageTitle',
 				type: 'input',
-				message: 'Bundle name',
-				default: projectName
+				message: 'Site page title',
+				default: 'todo'
 			},
 			{
-				name: 'hasTest',
+				name: 'themeColor',
+				type: 'input',
+				message: 'Theme color',
+				default: '#1d3f72'
+			},
+			{
+				name: 'appName',
+				type: 'input',
+				message: 'App name',
+				default: 'todo'
+			},
+			{
+				name: 'hasErrorMonitor',
 				type: 'confirm',
-				message: 'Set up unit tests?',
+				message: 'Use error monitor?',
 				default: true
 			},
 			{
-				name: 'hasPuppeteer',
+				name: 'hasSecan',
 				type: 'confirm',
-				message: 'Use puppeteer for tests?',
+				message: 'Use secan?',
 				default: false,
-				when({ hasTest }) {
-					return hasTest;
+				when({ hasErrorMonitor }) {
+					return hasErrorMonitor;
 				}
-			},
-			{
-				name: 'hasPock',
-				type: 'confirm',
-				message: 'Use pock for dev and tests?',
-				default: true
 			},
 			{
 				name: 'hasTravis',
 				type: 'confirm',
 				message: 'Use travis-ci?',
 				default: true
-			},
-			{
-				name: 'email',
-				type: 'input',
-				message: 'Email',
-				validate(input) {
-					return !!input;
-				},
-				when({ hasTravis }) {
-					return hasTravis;
-				}
-			},
-			{
-				name: 'compressTool',
-				type: 'list',
-				message: 'Which compress tool do you need?',
-				choices: [{
-					name: 'babel-minify',
-					value: 'minify'
-				}, {
-					name: 'uglify',
-					value: 'uglify'
-				}]
-			},
-			{
-				name: 'useForNode',
-				type: 'confirm',
-				message: 'Use for node?',
-				default: false
 			}
 		],
 		complete(answers) {
-			const { hasTest, hasPuppeteer, hasPock, hasTravis } = answers,
+			const { hasErrorMonitor, hasTravis, hasSecan } = answers,
 				excludes = ['.dulu.js'],
-				templates = ['_package.json', 'LICENSE', 'rollup.config.js', 'rollup.dev.js', 'README.md'],
+				templates = ['_package.json', 'README.md', '.env', '.env.development', '.env.production', 'vue.config.js', 'src/main.js', 'src/router.js'],
 				transform = {
 					'_package.json': 'package.json'
 				};
 			answers.keywords = answers.keywords ? answers.keywords.split(/\s+/) : [];
 
+			if (!hasErrorMonitor) {
+				excludes.push('.sentryclirc', 'src/lib/error-collect.js', 'src/lib/load-sentry.js');
+			}
+
+			if (!hasSecan) {
+				excludes.push('src/lib/guard.js');
+			}
+
 			if (!hasTravis) {
 				excludes.push('.travis.yml');
 			} else {
 				templates.push('.travis.yml');
-			}
-
-			if (!hasPock) {
-				excludes.push('.pockrc.yml', 'example/router');
-			}
-
-			if (!hasPuppeteer) {
-				excludes.push('.npmrc');
-			}
-
-			if (hasTest) {
-				templates.push('test/index.test.js');
-				if (!hasPuppeteer) {
-					excludes.push('test/_puppeteer.js');
-				}
-				if (!hasPock) {
-					excludes.push('test/_pock.js');
-				}
-			} else {
-				excludes.push('test', 'example/test.html');
 			}
 
 			return {

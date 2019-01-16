@@ -1,18 +1,22 @@
 module.exports = {
+	root: true,
 	env: {
 		es6: true,
 		browser: true,
 		node: true
 	},
-	// 不要用eslint-config-prettier, 那是个傻逼东西, 只用eslint-plugin-prettier就好
-	// 'extends': ['eslint:recommended', 'plugin:prettier/recommended'],
-	extends: 'eslint:recommended',
+	globals: {
+		DEBUG: true
+	},
+	extends: ['plugin:vue/essential'],
 	plugins: ['prettier'],
 	parserOptions: {
+		parser: 'babel-eslint',
 		ecmaVersion: 2018,
 		sourceType: 'module'
 	},
 	rules: {
+		'no-undef': 'error',
 		'no-console': 'off',
 		'no-debugger': 'off',
 		'no-extra-boolean-cast': 'off',

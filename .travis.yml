@@ -7,10 +7,10 @@ cache:
   directories:
   - "$HOME/.npm"
 script:
-- npm run lint{{if hasTest}}
+- npm run lint
 - npm test
 after_success:
-- npm run coverage{{/if}}
+- npm run build-ci
 git:
   depth: 1
 notifications:
@@ -18,11 +18,9 @@ notifications:
     on_success: never
     on_failure: always
 deploy:
-  provider: npm
+  provider: script
+  script: bash echo todo
   skip_cleanup: true
-  email: {{email}}
-  api_key:
-    secure: todo
   on:
     tags: true
     repo: {{author}}/{{project}}

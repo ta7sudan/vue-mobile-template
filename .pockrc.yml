@@ -1,6 +1,10 @@
-dirs: ./example/router
-static:
-  root: ./example
+dirs: ./mock
 watch: true
-cors: true
-port: 8080
+cors:
+  origin: true
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD']
+  allowedHeaders: ['AUTH', 'Content-Type']
+port: 3000
+proxy:
+  prefix: /error
+  upstream: https://hook.bearychat.com
