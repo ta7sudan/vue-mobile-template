@@ -65,7 +65,7 @@ const store = new Vuex.Store({
 				}));
 				data.posts.forEach(post => {
 					if (!post.parsed) {
-						post.content = addTableWrapper(marked(post.content), 'table-wrapper');
+						post.content = addTableWrapper(post.content, 'table-wrapper');
 						post.trimedHtml = trimHtml(post.content, {
 							limit: 200,
 							suffix: '...'
@@ -83,7 +83,7 @@ const store = new Vuex.Store({
 				return state.about;
 			}
 			const { data: { content }} = await h(apis.getProfile());
-			commit(SET_ABOUT, addTableWrapper(marked(content), 'table-wrapper'));
+			commit(SET_ABOUT, addTableWrapper(content, 'table-wrapper'));
 			return content;
 		}
 	}
