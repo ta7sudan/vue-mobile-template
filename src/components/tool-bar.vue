@@ -54,7 +54,7 @@ export default {
 		},
 		doScroll() {
 			const currentPos = scrollY();
-			this.show = currentPos - this.lastPos < 0;
+			this.show = currentPos - this.lastPos < 0 || currentPos < 1;
 			this.lastPos = currentPos;
 		}
 	},
@@ -103,9 +103,9 @@ export default {
 .logo {
 	color: $logoColor;
 	font-family: "Covered By Your Grace", cursive, "Helvetica Neue", Helvetica, Tahoma, Arial;
-	@include font(30);
+	@include font(34);
 	position: absolute;
-	left: 22px;
+	left: 32px;
 	top: 50%;
 	transform: translateY(-50%);
 }

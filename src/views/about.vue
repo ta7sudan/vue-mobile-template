@@ -3,7 +3,7 @@
 		<div class="about-page">
 			<div class="title-map"><h1 class="page-title">About</h1></div>
 			<div class="main">
-				This is about page
+				This is about page.
 			</div>
 		</div>
 	</page-layout>
@@ -20,7 +20,7 @@ import store from '../store';
 export default {
 	pageTitle: `About | ${TITLE}`,
 	computed: {
-		...mapState(['about'])
+		...mapState(['userProfile'])
 	},
 	beforeRouteEnter: routerLock(function (to, from, next) {
 		NProgress.start();

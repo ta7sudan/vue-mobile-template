@@ -3,7 +3,7 @@ import Vuex from 'vuex';
 import {
 	SET_POSTS_TOTAL,
 	ADD_POSTS,
-	SET_ABOUT } from './mutation-types';
+	SET_USERPROFILE } from './mutation-types';
 import apis from '../lib/apis';
 import { apizHelper as h, trimHtml, addTableWrapper } from '../lib/util';
 
@@ -16,7 +16,7 @@ const store = new Vuex.Store({
 		// 命名没起好...不过为了兼容性算了不改了..
 		total: 0,
 		posts: [],
-		about: ''
+		userProfile: null
 	},
 	getters: {
 		// O(n^2)插入
@@ -48,8 +48,8 @@ const store = new Vuex.Store({
 				state.posts.push(post);
 			}
 		},
-		[SET_ABOUT](state, content) {
-			state.about = content;
+		[SET_USERPROFILE](state, data) {
+			state.userProfile = data;
 		}
 	},
 	// 基本上所有接口数据都会做缓存, 但是目前因为是session范围的缓存,
@@ -79,12 +79,17 @@ const store = new Vuex.Store({
 			return pageMap[page];
 		},
 		async getProfile({ commit, state }) {
-			if (state.about) {
-				return state.about;
+			if (state.userProfile) {
+				return state.userProfile;
 			}
-			const { data: { content }} = await h(apis.getProfile());
-			commit(SET_ABOUT, addTableWrapper(content, 'table-wrapper'));
-			return content;
+			const { data: { name, desc, profile }} = await h(apis.getProfile());
+			const userProfile = {
+				name,
+				desc,
+				profile: addTableWrapper(profile, 'table-wrapper')
+			};
+			commit(SET_USERPROFILE, userProfile);
+			return userProfile;
 		}
 	}
 });

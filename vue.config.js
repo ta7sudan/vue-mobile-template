@@ -2,14 +2,12 @@ const WebpackDeepScopeAnalysisPlugin = require('webpack-deep-scope-plugin').defa
 const PreloadFontPlugin = require('preload-font-plugin');
 // const PreloadWebpackPlugin = require('@vue/preload-webpack-plugin');
 // const HtmlTagAttrPlugin = require('html-tag-attributes-plugin');{{if hasErrorMonitor}}
+const GitRevisionPlugin = require('git-revision-webpack-plugin');
 const SentryCliPlugin = require('@sentry/webpack-plugin');{{/if}}
-const childProcess = require('child_process');
 const { compressCSS, compressHTML, compressJS } = require('./compress');
-// 依赖于git是不是不太好, 毕竟可能CI环境下没有git, 这样就还得装个git
-// 理想的方案应该是在npm script里面执行cross-env RELEASE_VERSION=$(sentry-cli releases propose-version) vue-cli-service build --modern
-// 这样的话不需要git, sentry-cli是跨平台的, 然而不知道为什么会报错, 不是很懂shell
-// 暂时先这么搞吧, 等有空找个shell大佬问下
-process.env.RELEASE_VERSION = childProcess.execSync('git rev-parse HEAD').toString().trim();
+{{if hasErrorMonitor}}
+const gitRevisionPlugin = new GitRevisionPlugin();
+{{/if}}
 
 module.exports = {
 	publicPath: process.env.CDN || '/',
@@ -46,7 +44,8 @@ module.exports = {
 			.end();
 		// .alias
 		// .set('@asset', path.resolve(__dirname, './src/assets'));
-		const imgLoader = config.module
+		// const imgLoader = 
+		config.module
 			.rule('images')
 			.use('url-loader')
 			.loader('url-loader')
@@ -73,7 +72,8 @@ module.exports = {
 					}
 				}
 			});
-		const svgLoader = config.module
+		// const svgLoader = 
+		config.module
 			.rule('svg')
 			.use('file-loader')
 			.loader('svg-url-loader')
@@ -85,8 +85,24 @@ module.exports = {
 				// iesafe: true,
 			})
 			.end();
+{{if hasErrorMonitor}}
+		config.plugin('git-plugin')
+			.use(GitRevisionPlugin)
+			// 本来这里应该返回之前创建好的实例的,
+			// 但是Vue Cli的modern模式会构建两次,
+			// 导致第二次复用了第一次的实例, 本来
+			// 这也没什么问题, 但是webpack-chain会给
+			// 这个实例使用Object.defineProperty把
+			// configurable设置为false, 导致第二次构建
+			// 时候使用Object.defineProperty报错,
+			// 所以就不能够复用同一个实例, 但是这东
+			// 西不复用实例讲道理是会有问题, 不过实际上
+			// 这里不复用实例其实也没什么问题...那就这样吧
+			// .init(() => gitRevisionPlugin)
+			.before('vue-loader');
+{{/if}}
 		config.plugin('define').tap(args => { {{if hasErrorMonitor}}
-			args[0]['process.env'].RELEASE_VERSION = JSON.stringify(process.env.RELEASE_VERSION);
+			args[0]['process.env'].RELEASE_VERSION = JSON.stringify(gitRevisionPlugin.commithash());
 			args[0]['process.env'].SENTRY_DSN = JSON.stringify(process.env.SENTRY_DSN);{{/if}}
 			return [
 				{
@@ -117,7 +133,7 @@ module.exports = {
 			css: compressCSS('./src/styles/reset.css') + compressCSS('./src/styles/loading.css'),
 			html: compressHTML('./src/loading.tpl'),{{if hasErrorMonitor}}
 			errorScript: compressJS('./src/lib/error-collect.js')
-				.replace(/\w+\.RELEASE/, JSON.stringify(process.env.RELEASE_VERSION))
+				.replace(/\w+\.RELEASE/, JSON.stringify(gitRevisionPlugin.commithash()))
 				.replace(/\w+\.BACKUP_MONITORURL/, JSON.stringify(process.env.BACKUP_MONITORURL))
 				.replace(/\w+\.CHANNEL/, JSON.stringify(process.env.CHANNEL)),{{/if}}
 			loadingScript: compressJS('./src/lib/loading.js'),
@@ -136,6 +152,9 @@ module.exports = {
 		// 	}
 		// }]);
 
+		// 暂时还是去掉prefetch, prefetch的页面多了会
+		// 后续ajax请求排队自己从代码层面控制是否预加载会更好一些
+		config.plugins.delete('prefetch');
 		// 这个简直坑爹, vue cli在之后合并的preload插件的配置选项,
 		// 于是如果你用tap修改preload插件的配置选项永远是报错,
 		// 简单讲, 就是在你tap的时候, vue内部还没有use, 于是gg,
@@ -171,21 +190,21 @@ module.exports = {
 			}
 		}]);
 		if (process.env.NODE_ENV === 'production') {
-			imgLoader
-				.use('image-webpack-loader')
-				.loader('image-webpack-loader')
-				.options({
-					// 这里只为开启webp, 注意它不负责把其他jpg, png转成webp,
-					// 它只负责把压缩率不到75的webp压到75,
-					// 如果需要将其他格式转webp, 请关掉默认的其他格式压缩器,
-					// 其他压缩器选项有点多, 有空再慢慢调
-					webp: {
-						quality: 75
-					}
-				});
-			svgLoader
-				.use('image-webpack-loader')
-				.loader('image-webpack-loader');
+			// imgLoader
+			// 	.use('image-webpack-loader')
+			// 	.loader('image-webpack-loader')
+			// 	.options({
+			// 		// 这里只为开启webp, 注意它不负责把其他jpg, png转成webp,
+			// 		// 它只负责把压缩率不到75的webp压到75,
+			// 		// 如果需要将其他格式转webp, 请关掉默认的其他格式压缩器,
+			// 		// 其他压缩器选项有点多, 有空再慢慢调
+			// 		webp: {
+			// 			quality: 75
+			// 		}
+			// 	});
+			// svgLoader
+			// 	.use('image-webpack-loader')
+			// 	.loader('image-webpack-loader');
 			config.plugin('deepscope').use(WebpackDeepScopeAnalysisPlugin);{{if hasErrorMonitor}}
 			// 这个坑爹的sentry插件在Windows下建议手动下载它的exe放到它自己的bin目录下
 			// 不然谜之卡死

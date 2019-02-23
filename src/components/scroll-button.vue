@@ -31,6 +31,7 @@ export default {
 			}
 		},
 		scrollToTop() {
+			// MMP safari不支持原生是smooth选项
 			try {
 				window.scrollTo({
 					top: 0,
@@ -72,10 +73,10 @@ export default {
 <style lang="postcss" scoped>
 @import '../styles/theme-light.css';
 .scroll-button {
-	width: 90px;
-	height: 90px;
+	width: 110px;
+	height: 110px;
 	box-sizing: border-box;
-	border: 4px solid $scrollTopBtnColor;
+	border: 6px solid $scrollTopBtnColor;
 	border-radius: 50%;
 	background: $scrollTopBtnBgColor;
 	box-shadow: 0 5px 20px $scrollTopBtnShadowColor;
@@ -87,7 +88,7 @@ export default {
 	transition: all 0.3s ease;
 	i {
 		color: $scrollTopBtnColor;
-		font-size: 8vw;
+		font-size: 10vw;
 		transition: all 0.3s ease;
 	}
 	&:active {
